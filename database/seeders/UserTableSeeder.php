@@ -1,0 +1,44 @@
+<?php
+
+namespace Database\Seeders;
+
+use Illuminate\Database\Console\Seeds\WithoutModelEvents;
+use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Hash;
+use DB;
+
+class UserTableSeeder extends Seeder
+{
+    /**
+     * Run the database seeds.
+     */
+    public function run(): void
+    {
+        DB::table('users')->insert([
+            [
+                'name' => 'Admin',
+                'username' => 'admin',
+                'email' => 'admin@gmail.com',
+                'password' => Hash::make('123'),
+                'role' => 'Admin',
+                'status' => 'active',
+            ],
+            [
+                'name' => 'Kavindu Pramod',
+                'username' => 'Kavindupro',
+                'email' => 'kavindu@gmail.com',
+                'password' => Hash::make('223'), 
+                'role' => 'Professional',
+                'status' => 'active',
+            ],
+            [
+                'name' => 'Vihanga Sankalpa',
+                'username' => 'vihanga123',
+                'email' => 'vihanga@gmail.com',
+                'password' => Hash::make('password123'), // Password hashing for security
+                'role' => 'User',
+                'status' => 'inactive',
+            ],
+        ]);
+    }
+}
