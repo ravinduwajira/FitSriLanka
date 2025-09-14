@@ -22,18 +22,16 @@ jobs:
     services:
       mysql:
         image: mysql:8.0
-        ports:
-          - 3306:3306
         env:
           MYSQL_ROOT_PASSWORD: root
-          MYSQL_DATABASE: testing
-          MYSQL_USER: laravel
-          MYSQL_PASSWORD: secret
+          MYSQL_DATABASE: fitsrilanka
+        ports:
+          - 3306:3306
         options: >-
-          --health-cmd="mysqladmin ping -h 127.0.0.1 --password=root"
+          --health-cmd="mysqladmin ping -h 127.0.0.1"
           --health-interval=10s
           --health-timeout=5s
-          --health-retries=5
+          --health-retries=3
 
     strategy:
       fail-fast: true
@@ -50,7 +48,7 @@ jobs:
         uses: shivammathur/setup-php@v2
         with:
           php-version: ${{ matrix.php }}
-          extensions: dom, curl, libxml, mbstring, zip, pcntl, pdo, mysql
+          extensions: dom, curl, libxml, mbstring, zip, pcntl, pdo, mysql, pdo_mysql
           coverage: none
 
       - name: Install Composer dependencies
@@ -59,14 +57,23 @@ jobs:
       - name: Copy environment file
         run: cp .env.example .env
 
-      - name: Set MySQL environment
+      - name: Set DB credentials
         run: |
-          php -r "file_put_contents('.env', preg_replace('/^DB_CONNECTION=.*/m', 'DB_CONNECTION=mysql', file_get_contents('.env')));"
-          php -r "file_put_contents('.env', preg_replace('/^DB_HOST=.*/m', 'DB_HOST=127.0.0.1', file_get_contents('.env')));"
-          php -r "file_put_contents('.env', preg_replace('/^DB_PORT=.*/m', 'DB_PORT=3306', file_get_contents('.env')));"
-          php -r "file_put_contents('.env', preg_replace('/^DB_DATABASE=.*/m', 'DB_DATABASE=testing', file_get_contents('.env')));"
-          php -r "file_put_contents('.env', preg_replace('/^DB_USERNAME=.*/m', 'DB_USERNAME=laravel', file_get_contents('.env')));"
-          php -r "file_put_contents('.env', preg_replace('/^DB_PASSWORD=.*/m', 'DB_PASSWORD=secret', file_get_contents('.env')));"
+          sed -i 's/DB_CONNECTION=.*/DB_CONNECTION=mysql/' .env
+          sed -i 's/DB_HOST=.*/DB_HOST=127.0.0.1/' .env
+          sed -i 's/DB_PORT=.*/DB_PORT=3306/' .env
+          sed -i 's/DB_DATABASE=.*/DB_DATABASE=fitsrilanka/' .env
+          sed -i 's/DB_USERNAME=.*/DB_USERNAME=root/' .env
+          sed -i 's/DB_PASSWORD=.*/DB_PASSWORD=root/' .env
+
+      - name: Wait for MySQL to be ready
+        run: |
+          for i in {1..30}; do
+            if mysqladmin ping -h127.0.0.1 -uroot -proot --silent; then
+              break
+            fi
+            sleep 2
+          done
 
       - name: Generate app key
         run: php artisan key:generate
